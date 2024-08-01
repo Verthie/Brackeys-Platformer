@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 const INF_COL : int = 99999
-const DEBUGGING : int = 1 # Change to 1 for debugging
+const DEBUGGING : int = 0 # Change to 1 for debugging
 const CODE_MACRO_PLAY_END : int = 10000
 
 const BREAKERS : Dictionary = { '!': 1, '"': 1, '#': 1, '$': 1, '%': 1, '&': 1, '(': 1, ')': 1, '*': 1, '+': 1, ',': 1, '-': 1, '.': 1, '/': 1, ':': 1, ';': 1, '<': 1, '=': 1, '>': 1, '?': 1, '@': 1, '[': 1, '\\': 1, ']': 1, '^': 1, '`': 1, '\'': 1, '{': 1, '|': 1, '}': 1, '~': 1 }
@@ -42,10 +42,10 @@ var the_key_map : Array[Dictionary] = [
 	{ "keys": ["Shift+M"],                      "type": MOTION, "motion": "move_to_middle_line", "motion_args": { "to_jump_list": true } },
 	{ "keys": ["G", "G"],                       "type": MOTION, "motion": "move_to_line_or_edge_of_document", "motion_args": { "forward": false, "to_jump_list": true } },
 	{ "keys": ["Shift+G"],                      "type": MOTION, "motion": "move_to_line_or_edge_of_document", "motion_args": { "forward": true, "to_jump_list": true } },
-	{ "keys": ["O"],                            "type": MOTION, "motion": "move_by_page", "motion_args": { "forward": true } },
-	{ "keys": ["U"],                            "type": MOTION, "motion": "move_by_page", "motion_args": { "forward": false } },
-	{ "keys": ["Ctrl+D"],                       "type": MOTION, "motion": "move_by_scroll", "motion_args": { "forward": true } },
-	{ "keys": ["Ctrl+U"],                       "type": MOTION, "motion": "move_by_scroll", "motion_args": { "forward": false } },
+	{ "keys": ["Shift+O"],                      "type": MOTION, "motion": "move_by_page", "motion_args": { "forward": true } },
+	{ "keys": ["Shift+U"],                      "type": MOTION, "motion": "move_by_page", "motion_args": { "forward": false } },
+	{ "keys": ["O"],                            "type": MOTION, "motion": "move_by_scroll", "motion_args": { "forward": true } },
+	{ "keys": ["U"],                            "type": MOTION, "motion": "move_by_scroll", "motion_args": { "forward": false } },
 	{ "keys": ["Shift+BackSlash"],              "type": MOTION, "motion": "move_to_column" },
 	{ "keys": ["W"],                            "type": MOTION, "motion": "move_by_words", "motion_args": { "forward": true, "word_end": false, "big_word": false } },
 	{ "keys": ["Shift+W"],                      "type": MOTION, "motion": "move_by_words", "motion_args": { "forward": true, "word_end": false, "big_word": true } },
@@ -102,8 +102,8 @@ var the_key_map : Array[Dictionary] = [
 	{ "keys": ["Shift+QuoteLeft"],              "type": OPERATOR_MOTION, "operator": "toggle_case", "motion": "move_by_characters", "motion_args": { "forward": true }, "context": Context.NORMAL },
 	{ "keys": ["P"],                            "type": ACTION, "action": "paste", "action_args": { "after": true } },
 	{ "keys": ["Shift+P"],                      "type": ACTION, "action": "paste", "action_args": { "after": false } },
-	{ "keys": ["Ctrl+U"],                       "type": ACTION, "action": "undo", "action_args": {}, "context": Context.NORMAL },
-	{ "keys": ["Ctrl+P"],                       "type": ACTION, "action": "redo", "action_args": {}, "context": Context.NORMAL },
+	#{ "keys": ["Ctrl+U"],                       "type": ACTION, "action": "undo", "action_args": {}, "context": Context.NORMAL },
+	#{ "keys": ["Ctrl+P"],                       "type": ACTION, "action": "redo", "action_args": {}, "context": Context.NORMAL },
 	{ "keys": ["R", "{char}"],                  "type": ACTION, "action": "replace", "action_args": {} },
 	{ "keys": ["Period"],                       "type": ACTION, "action": "repeat_last_edit", "action_args": {} },
 	{ "keys": ["H"],                            "type": ACTION, "action": "enter_insert_mode", "action_args": { "insert_at": "inplace" }, "context": Context.NORMAL },
@@ -115,8 +115,8 @@ var the_key_map : Array[Dictionary] = [
 	{ "keys": ["V"],                            "type": ACTION, "action": "enter_visual_mode", "action_args": { "line_wise": false } },
 	{ "keys": ["Shift+V"],                      "type": ACTION, "action": "enter_visual_mode", "action_args": { "line_wise": true } },
 	{ "keys": ["Slash"],                        "type": ACTION, "action": "search", "action_args": {} },
-	{ "keys": ["Ctrl+O"],                       "type": ACTION, "action": "jump_list_walk", "action_args": { "forward": false } },
-	{ "keys": ["Ctrl+I"],                       "type": ACTION, "action": "jump_list_walk", "action_args": { "forward": true } },
+	{ "keys": ["Ctrl+U"],                       "type": ACTION, "action": "jump_list_walk", "action_args": { "forward": false } },
+	{ "keys": ["Ctrl+O"],                       "type": ACTION, "action": "jump_list_walk", "action_args": { "forward": true } },
 	{ "keys": ["Z", "Z"],                       "type": MOTION, "motion": "center_to_caret", },
 	{ "keys": ["Z", "A"],                       "type": ACTION, "action": "toggle_folding", },
 	{ "keys": ["Z", "Shift+M"],                 "type": ACTION, "action": "fold_all", },
@@ -138,13 +138,11 @@ var the_key_map : Array[Dictionary] = [
 var command_keys_white_list : Dictionary = {
 	"Escape": 1,
 	"Enter": 1,
-	# "Ctrl+F": 1,  # Uncomment if you would like move-forward by page function instead of search on slash
-	"Ctrl+B": 1,
 	"Ctrl+U": 1,
-	"Ctrl+D": 1,
+	#"Ctrl+P": 1,
+	#"Ctrl+D": 1,
 	"Ctrl+O": 1,
-	"Ctrl+I": 1,
-	"Ctrl+R": 1
+	#"Ctrl+I": 1,
 }
 
 
@@ -657,17 +655,19 @@ class Command:
 		var repeat : int = args.repeat
 		var forward : bool = args.get("forward", false)
 		var range = ed.selection()
+		
+		if range == null:
+			if forward: ed.indent()
+			else: ed.unindent()
+		else:
+			if not range.is_single_line() and range.to.column == 0: # Don't select the last empty line
+				ed.select(range.from.line, range.from.column, range.to.line-1, INF_COL)
 
-		if not range.is_single_line() and range.to.column == 0: # Don't select the last empty line
-			ed.select(range.from.line, range.from.column, range.to.line-1, INF_COL)
-
-		ed.begin_complex_operation()
-		for i in range(repeat):
-			if forward:
-				ed.indent()
-			else:
-				ed.unindent()
-		ed.end_complex_operation()
+			ed.begin_complex_operation()
+			for i in range(repeat):
+				if forward: ed.indent()
+				else: ed.unindent()
+			ed.end_complex_operation()
 
 	static func join_lines(args: Dictionary, ed: EditorAdaptor, vim: Vim) -> void:
 		if vim.current.normal_mode:
@@ -1283,8 +1283,8 @@ class EditorAdaptor:
 		if block:
 			code_editor.caret_blink = false
 			if curr_column() == last_column() + 1:
-				code_editor.caret_type = TextEdit.CARET_TYPE_LINE
-				code_editor.add_theme_constant_override("caret_width", 8)
+				code_editor.caret_type = TextEdit.CARET_TYPE_BLOCK
+				code_editor.add_theme_constant_override("caret_width", 1)
 			else:
 				code_editor.caret_type = TextEdit.CARET_TYPE_BLOCK
 				code_editor.add_theme_constant_override("caret_width", 1)
@@ -1316,9 +1316,12 @@ class EditorAdaptor:
 		return code_editor.get_selected_text()
 
 	func selection() -> TextRange:
-		var from := Position.new(code_editor.get_selection_from_line(), code_editor.get_selection_from_column())
-		var to := Position.new(code_editor.get_selection_to_line(), code_editor.get_selection_to_column())
-		return TextRange.new(from, to)
+		if code_editor.has_selection():
+			var from := Position.new(code_editor.get_selection_from_line(), code_editor.get_selection_from_column())
+			var to := Position.new(code_editor.get_selection_to_line(), code_editor.get_selection_to_column())
+			return TextRange.new(from, to)
+		else:
+			return null
 
 	func replace_selection(text: String) -> void:
 		var col := curr_column()
